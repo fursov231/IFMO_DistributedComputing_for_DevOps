@@ -51,13 +51,7 @@
     dest: "{{ home_path }}/.env"
     force: yes
 
-- name: Создаём каталог wordpress
-  file:
-    path: /home/user/wordpress
-    state: directory
-    mode: '0755'
-
-- name: Создаём каталог nginx-conf
+- name: Создать каталог nginx-conf
   file:
     path: /home/user/nginx-conf
     state: directory
