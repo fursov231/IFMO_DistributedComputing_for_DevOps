@@ -1,0 +1,4 @@
+- name: Восстановить дамп на slave
+  shell: |
+    docker exec -i {{ slave_container_name }} \
+    sh -c "mysql -u{{ mysql_root_user }} -p{{ mysql_root_password }} < {{ dump_path }}"

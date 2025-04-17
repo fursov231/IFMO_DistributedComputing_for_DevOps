@@ -45,10 +45,11 @@
     force: yes
   notify: Restart Docker containers
 
-- name: Копировать .env файл
-  copy:
-    src: .env
+- name: Создать .env файл из шаблона
+  template:
+    src: .env.j2
     dest: "{{ home_path }}/.env"
+    mode: 0644
     force: yes
 
 - name: Создать каталог nginx-conf
@@ -67,3 +68,9 @@
   community.docker.docker_compose_v2:
     project_src: "{{ home_path }}"
     state: present
+  register: start_containers
+
+- name: Ожидание запуска контейнеров
+  pause:
+    seconds: 60
+  when: start_containers.changed

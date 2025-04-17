@@ -1,0 +1,32 @@
+- name: Проверка необходимости внесения изменений в my.cnf на slave
+  shell: |
+    docker exec {{ slave_container_name }} sh -c '
+      grep -E "^\s*server-id" {{ config_file }} && grep -E "^\s*log_bin" {{ config_file }}
+    '
+  register: check_mysql_slave_config
+  failed_when: false
+  changed_when: false
+
+- name: Внести настройки для репликации в my.cnf на slave
+  shell: |
+    docker exec {{ slave_container_name }} sh -c '
+      file="{{ config_file }}"
+      tmpfile=$(mktemp)
+      awk '\''{
+       print
+        if ($0 ~ /^\[mysqld\]/) {
+          print "server-id = 2"
+          print "log_bin = /var/log/mysql/mysql-bin.log"
+        }
+        if ($0 ~ /^\[client\]/) {
+          print "password = {{ mysql_root_password }}"
+          print "port = 3306"
+          print "host = 127.0.0.1"
+        }
+      }'\'' "$file" > "$tmpfile" && mv "$tmpfile" "$file"
+    '
+  when: check_mysql_slave_config.rc != 0
+
+- name: Рестарт slave после внесения изменения в my.cnf
+  shell: docker restart {{ slave_container_name }}
+  when: check_mysql_slave_config.rc != 0

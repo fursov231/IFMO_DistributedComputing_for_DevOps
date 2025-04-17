@@ -1,0 +1,56 @@
+- name: Установить библиотеки Python
+  apt:
+    name: [
+      "python3",
+      "python3-pip",
+      "python3-pymysql",
+      "python3-requests"
+    ]
+    state: latest
+
+- name: Создание пользователя репликации на master
+  mysql_user:
+    login_host: "{{ mysql_master_host }}"
+    login_user: "{{ mysql_root_user }}"
+    login_password: "{{ mysql_root_password }}"
+    host: "%"
+    name: "{{ mysql_replication_user }}"
+    password: "{{ mysql_replication_password }}"
+    priv: "*.*:REPLICATION SLAVE"
+    state: present
+
+- import_tasks: tasks/setup_master_config.yml
+
+- name: Создать volume для MySQL Slave
+  community.docker.docker_volume:
+    name: user_dbdata_slave
+    driver: local
+    state: present
+
+- name: Запустить MySQL Slave
+  community.docker.docker_container:
+    name: "{{ slave_container_name }}"
+    image: mysql:8.0.42
+    env:
+      MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+    volumes:
+      - user_dbdata_slave:/var/lib/mysql
+      - user_temp:/tmp
+    ports:
+      - "3307:3306"
+    restart_policy: unless-stopped
+    command: --server-id=2
+  register: slave_container
+
+- name: Ожидание запуска slave
+  pause:
+    seconds: 20
+  when: slave_container.changed
+
+- name: Выполнить задачи по настройке репликации
+  block:
+    - import_tasks: tasks/setup_slave_config.yml
+    - import_tasks: tasks/dump_master.yml
+    - import_tasks: tasks/restore_dump_on_slave.yml
+    - import_tasks: tasks/setup_replication.yml
+  when: slave_container.changed

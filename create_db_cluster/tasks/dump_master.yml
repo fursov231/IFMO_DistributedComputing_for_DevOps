@@ -1,0 +1,26 @@
+- name: Заблокировать master на запись для снятия дампа
+  shell: |
+    docker exec -i {{ master_container_name }} \
+    sh -c "mysql -u{{ mysql_root_user }} -p{{ mysql_password }} -e 'FLUSH TABLES WITH READ LOCK; DO SLEEP(60);'" &
+  async: 70
+  poll: 0
+  register: lock_job
+
+- name: Ожидание блокировки master
+  pause:
+    seconds: 3
+
+- name: Снять дамп с master
+  shell: |
+    docker exec {{ master_container_name }} \
+    sh -c "mysqldump -u{{ mysql_root_user }} -p{{ mysql_root_password }} --all-databases --flush-logs --master-data=2 > {{ dump_path }}"
+  register: dump_result
+  changed_when: true
+
+- name: Ожидание завершения блокировки master
+  async_status:
+    jid: "{{ lock_job.ansible_job_id }}"
+  register: lock_job_status
+  until: lock_job_status.finished
+  retries: 10
+  delay: 2
