@@ -8,6 +8,9 @@
     ]
     state: latest
 
+- name: Переподключиться после установки библиотек для сброса кэша путей к исполняемым файлам
+  ansible.builtin.meta: reset_connection
+
 - name: Создание пользователя репликации на master
   mysql_user:
     login_host: "{{ mysql_master_host }}"
