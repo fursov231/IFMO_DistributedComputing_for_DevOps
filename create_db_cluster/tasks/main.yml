@@ -19,8 +19,6 @@
     priv: "*.*:REPLICATION SLAVE"
     state: present
 
-- import_tasks: tasks/setup_master_config.yml
-
 - name: Создать volume для MySQL Slave
   community.docker.docker_volume:
     name: user_dbdata_slave
@@ -44,12 +42,11 @@
 
 - name: Ожидание запуска slave
   pause:
-    seconds: 20
+    seconds: 60
   when: slave_container.changed
 
 - name: Выполнить задачи по настройке репликации
   block:
-    - import_tasks: tasks/setup_slave_config.yml
     - import_tasks: tasks/dump_master.yml
     - import_tasks: tasks/restore_dump_on_slave.yml
     - import_tasks: tasks/setup_replication.yml

@@ -19,7 +19,10 @@ services:
     volumes:
       - dbdata_master:/var/lib/mysql
       - temp:/tmp
-    command: '--default-authentication-plugin=mysql_native_password'
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --server-id=1
+      --log-bin=/var/lib/mysql/mysql-bin.log
     networks:
       - app-network
   wordpress:

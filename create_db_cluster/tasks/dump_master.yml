@@ -11,9 +11,13 @@
     seconds: 3
 
 - name: Снять дамп с master
-  shell: |
-    docker exec {{ master_container_name }} \
-    sh -c "mysqldump -u{{ mysql_root_user }} -p{{ mysql_root_password }} --all-databases --flush-logs --master-data=2 > {{ dump_path }}"
+  community.mysql.mysql_db:
+    login_host: "{{ mysql_master_host }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: dump
+    name: all
+    target: "{{ dump_path }}"
   register: dump_result
   changed_when: true
 
