@@ -1,10 +1,11 @@
-- name: Установить библиотеки Python
+- name: Установить библиотеки
   apt:
     name: [
       "python3",
       "python3-pip",
       "python3-pymysql",
-      "python3-requests"
+      "python3-requests",
+      "mysql-client-core-8.0"
     ]
     state: latest
 
