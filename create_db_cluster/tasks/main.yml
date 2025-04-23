@@ -14,8 +14,8 @@
 
 - name: Создание пользователя репликации на master
   mysql_user:
-    login_host: "{{ mysql_master_host }}"
-    login_user: "{{ mysql_root_user }}"
+    login_host: 127.0.0.1
+    login_user: root
     login_password: "{{ mysql_root_password }}"
     host: "%"
     name: "{{ mysql_replication_user }}"
@@ -35,9 +35,10 @@
     image: mysql:8.0.42
     env:
       MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+    networks:
+      - name: "{{ network_name }}"
     volumes:
       - user_dbdata_slave:/var/lib/mysql
-      - user_temp:/tmp
     ports:
       - "3307:3306"
     restart_policy: unless-stopped

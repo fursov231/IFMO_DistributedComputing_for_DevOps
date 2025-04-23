@@ -1,7 +1,7 @@
 - name: Заблокировать master на запись для снятия дампа
   shell: |
     docker exec -i {{ master_container_name }} \
-    sh -c "mysql -u{{ mysql_root_user }} -p{{ mysql_password }} -e 'FLUSH TABLES WITH READ LOCK; DO SLEEP(60);'" &
+    sh -c "mysql -uroot -p{{ mysql_password }} -e 'FLUSH TABLES WITH READ LOCK; DO SLEEP(60);'" &
   async: 70
   poll: 0
   register: lock_job
@@ -12,7 +12,7 @@
 
 - name: Снять дамп с master
   community.mysql.mysql_db:
-    login_host: "{{ mysql_master_host }}"
+    login_host: 127.0.0.1
     login_user: root
     login_password: "{{ mysql_root_password }}"
     state: dump

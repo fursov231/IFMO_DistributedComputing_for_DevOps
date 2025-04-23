@@ -1,6 +1,6 @@
 ---
 - name: Tasks for Distributed Computing course
-  hosts: YANDEX_SERVERS
+  hosts: SERVERS
   become: true
 
   roles:

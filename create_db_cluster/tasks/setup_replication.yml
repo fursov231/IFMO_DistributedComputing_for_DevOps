@@ -17,7 +17,7 @@
     login_port: "{{ mysql_slave_port }}"
     query: >
       CHANGE MASTER TO
-        MASTER_HOST='{{ mysql_master_host }}',
+        MASTER_HOST='{{ master_container_name }}',
         MASTER_USER='{{ mysql_replication_user }}',
         MASTER_PASSWORD='{{ mysql_replication_password }}',
         MASTER_LOG_FILE='{{ master_log_file }}',
@@ -33,7 +33,7 @@
 - name: Проверить replica статус
   community.docker.docker_container_exec:
     container: "{{ slave_container_name }}"
-    command: mysql -u{{ mysql_root_user }} -p{{ mysql_root_password }} -e "SHOW REPLICA STATUS\G"
+    command: mysql -uroot -p{{ mysql_root_password }} -e "SHOW REPLICA STATUS\G"
   register: slave_status
   changed_when: false
 
