@@ -22,6 +22,12 @@ services:
       --default-authentication-plugin=mysql_native_password
       --server-id=1
       --log-bin=/var/lib/mysql/mysql-bin.log
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 3
+      start_period: 50s
+      timeout: 10s
     networks:
       - app-network
   wordpress:

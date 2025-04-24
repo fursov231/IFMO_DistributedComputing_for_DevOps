@@ -1,14 +1,15 @@
-- name: Заблокировать master на запись для снятия дампа
-  shell: |
-    docker exec -i {{ master_container_name }} \
-    sh -c "mysql -uroot -p{{ mysql_password }} -e 'FLUSH TABLES WITH READ LOCK; DO SLEEP(60);'" &
-  async: 70
-  poll: 0
-  register: lock_job
-
-- name: Ожидание блокировки master
-  pause:
-    seconds: 3
+- name: Заблокировать master на запись до завершения снятия дампа
+  community.docker.docker_container:
+    name: mysql_temporary_lock_container
+    image: mysql:8.0.42
+    command: >
+      sh -c "mysql -uroot -p{{ mysql_root_password }} -h {{ master_container_name }} -e 'FLUSH TABLES WITH READ LOCK;'; tail -f /dev/null"
+    entrypoint: ""
+    network_mode: container:{{ master_container_name }}
+    state: started
+    detach: true
+    restart_policy: no
+  register: temp_container
 
 - name: Снять дамп с master
   community.mysql.mysql_db:
@@ -18,13 +19,10 @@
     state: dump
     name: all
     target: "{{ dump_path }}"
-  register: dump_result
   changed_when: true
 
-- name: Ожидание завершения блокировки master
-  async_status:
-    jid: "{{ lock_job.ansible_job_id }}"
-  register: lock_job_status
-  until: lock_job_status.finished
-  retries: 10
-  delay: 2
+- name: Остановить временный контейнер для снятия блокировки master
+  community.docker.docker_container:
+    name: mysql_temporary_lock_container
+    state: stopped
+  when: temp_container.changed

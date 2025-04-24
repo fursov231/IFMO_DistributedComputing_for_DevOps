@@ -29,14 +29,3 @@
     login_password: "{{ mysql_root_password }}"
     login_port: "{{ mysql_slave_port }}"
     query: "START REPLICA;"
-
-- name: Проверить replica статус
-  community.docker.docker_container_exec:
-    container: "{{ slave_container_name }}"
-    command: mysql -uroot -p{{ mysql_root_password }} -e "SHOW REPLICA STATUS\G"
-  register: slave_status
-  changed_when: false
-
-- name: Напечатать replica status
-  debug:
-    var: slave_status
