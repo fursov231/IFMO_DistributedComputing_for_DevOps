@@ -1,8 +1,8 @@
 ---
-- name: Deploy app
-  hosts: YANDEX_SERVERS
+- name: Tasks for Distributed Computing course
+  hosts: SERVERS
   become: true
 
   roles:
-    - role:
-        deploy_wordpress
+    - deploy_wordpress
+    - create_db_cluster

@@ -45,15 +45,16 @@
     force: yes
   notify: Restart Docker containers
 
-- name: Копировать .env файл
-  copy:
-    src: .env
+- name: Создать .env файл из шаблона
+  template:
+    src: .env.j2
     dest: "{{ home_path }}/.env"
+    mode: 0644
     force: yes
 
 - name: Создать каталог nginx-conf
   file:
-    path: /home/user/nginx-conf
+    path: "{{ home_path }}/nginx-conf"
     state: directory
     mode: '0755'
 
@@ -67,3 +68,14 @@
   community.docker.docker_compose_v2:
     project_src: "{{ home_path }}"
     state: present
+  register: start_containers
+
+- name: Ожидание поднятия контейнера c master
+  community.docker.docker_container_info:
+    name: db_master
+  register: container_info
+  until: container_info.container.State.Health.Status == "healthy"
+  retries: 30
+  delay: 10
+  when: start_containers.changed
+  changed_when: false
