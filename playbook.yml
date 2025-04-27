@@ -6,3 +6,4 @@
   roles:
     - deploy_wordpress
     - create_db_cluster
+    - setup_monitoring
