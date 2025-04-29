@@ -8,7 +8,7 @@
     network_mode: container:{{ master_container_name }}
     state: started
     detach: true
-    restart_policy: no
+    restart_policy: "no"
     auto_remove: true
     volumes:
       - "{{ ansible_user }}_dbdata_temporary:/var/lib/mysql"

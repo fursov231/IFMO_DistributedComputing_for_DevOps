@@ -41,16 +41,16 @@
   template:
     src: docker-compose.yml.j2
     dest: "{{ home_path }}/docker-compose.yml"
-    mode: 0644
-    force: yes
+    mode: '0644'
+    force: true
   notify: Restart Docker containers
 
 - name: Создать .env файл из шаблона
   template:
     src: .env.j2
     dest: "{{ home_path }}/.env"
-    mode: 0644
-    force: yes
+    mode: '0644'
+    force: true
 
 - name: Создать каталог nginx-conf
   file:
@@ -62,7 +62,7 @@
   copy:
     src: nginx.conf
     dest: "{{ home_path }}/nginx-conf/nginx.conf"
-    force: yes
+    force: true
 
 - name: Запустить Docker контейнеры
   community.docker.docker_compose_v2:
