@@ -3,6 +3,7 @@
   ansible.builtin.file:
     path: "{{ home_path }}/monitoring"
     state: directory
+    mode: '0755'
 
 - name: Копировать prometheus.yml файл
   copy:

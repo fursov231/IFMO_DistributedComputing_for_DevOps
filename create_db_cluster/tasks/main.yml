@@ -12,6 +12,10 @@
 - name: Переподключиться после установки библиотек для сброса кэша путей к исполняемым файлам
   ansible.builtin.meta: reset_connection
 
+- name: Ожидание инициализации master
+  pause:
+    seconds: 10
+
 - name: Создание пользователя репликации на master
   mysql_user:
     login_host: 127.0.0.1
@@ -35,7 +39,7 @@
     name: "{{ slave_container_name }}"
     image: mysql:8.0.42
     env:
-      MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+      MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
     networks:
       - name: "{{ network_name }}"
     volumes:

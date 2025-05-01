@@ -38,7 +38,7 @@ services:
       - "9104:9104"
     command:
      - "--mysqld.username=root:{{ mysql_root_password }}"
-     - "--mysqld.address={{ master_container_name }}:{{ mysql_master_port }}"
+     - "--mysqld.address={{ master_container_name }}:3306"
     labels:
       - service=mysqld_exporter
     networks:
@@ -52,7 +52,7 @@ services:
       - "9105:9104"
     command:
      - "--mysqld.username=root:{{ mysql_root_password }}"
-     - "--mysqld.address={{ slave_container_name }}:{{ mysql_slave_port }}"
+     - "--mysqld.address={{ slave_container_name }}:3306"
     labels:
       - service=mysqld_exporter
     networks:
@@ -62,6 +62,7 @@ networks:
   app-network:
     name: {{ ansible_user }}_app-network
     driver: bridge
+    external: true
 
 volumes:
   prometheus:
