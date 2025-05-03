@@ -6,6 +6,4 @@ mysql_root_password: qwerty22
 is_wordpress: true
 wordpress_port: 80
 wordpress_db_name: wordpress
-db_master: db_master
-db_replica: db_slave
-db_pass: qwerty22
+db_host: db_master
