@@ -1,4 +1,3 @@
 collections:
-  - community.docker.docker_compose_v2
-  - community.grafana.grafana_datasource
-  - community.grafana.grafana_dashboard
+  - name: community.docker
+  - name: community.grafana
