@@ -1,4 +1,9 @@
 ---
+- name: Display Configuration Variables
+  ansible.builtin.debug:
+    msg:
+      - "monitoring_url: {{ monitoring_url }}"
+
 - name: Создать директорию для настройки мониторинга
   ansible.builtin.file:
     path: "{{ home_path }}/monitoring"

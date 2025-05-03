@@ -6,3 +6,7 @@ mysql_root_password: qwerty22
 mysql_replication_user: repl
 mysql_replication_password: repl22
 network_name: "{{ ansible_user }}_app-network"
+is_wordpress: true
+wordpress_port: 80
+wordpress_db_name: wordpress
+db_host: db_master

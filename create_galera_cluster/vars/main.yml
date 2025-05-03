@@ -9,3 +9,14 @@ dump_path: /tmp/dump_master.sql
 master_container_name: db_master
 slave_container_name: db_slave
 network_name: "{{ ansible_user }}_app-network"
+is_wordpress: true
+wordpress_port: 80
+wordpress_db_name: wordpress
+db1_host: galera_node_1
+db2_host: galera_node_2
+db3_host: galera_node_3
+db4_host: galera_node_4
+db5_host: galera_node_5
+db_pass: qwerty22
+loadbalancer: haproxy
+monitoring_url: http://192.168.1.99:3000

@@ -1,3 +1,12 @@
+- name: Display Configuration Variables
+  ansible.builtin.debug:
+    msg:
+      - "wordpress: {{ is_wordpress }}"
+      - "wordpress_port: {{ wordpress_port }}"
+      - "wordpress_db_name: {{ wordpress_db_name }}"
+      - "db_master: {{ db_master }}"
+      - "db_replica: {{ db_replica }}"
+      - "db_pass: {{ db_pass }}"
 - name: Установить библиотеки
   ansible.builtin.apt: # noqa package-latest
     name: [
