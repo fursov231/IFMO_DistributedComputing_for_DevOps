@@ -36,7 +36,7 @@
       MARIADB_GALERA_FORCE_SAFETOBOOTSTRAP: "yes"
       MARIADB_GALERA_SST_METHOD: "rsync"
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}" ]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}"]
       interval: 10s
       retries: 3
       start_period: 50s
@@ -74,7 +74,7 @@
     volumes:
       - "galera_data_node_{{ item }}:/bitnami/mariadb/data"
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}" ]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}"]
       interval: 10s
       retries: 3
       start_period: 50s
@@ -97,109 +97,108 @@
 - name: Выполнить задачи по настройке Galera cluster
   when: galera_bootstrap_node.changed
   block:
+    - name: Заблокировать master на запись до завершения переноса данных
+      community.docker.docker_container:
+        name: mysql_temporary_lock_container
+        image: mysql:8.0.42
+        command: >
+          sh -c "mysql -uroot -p{{ mysql_root_password }} -h {{ master_container_name }} -e 'FLUSH TABLES WITH READ LOCK;'; tail -f /dev/null"
+        entrypoint: ""
+        network_mode: container:{{ master_container_name }}
+        state: started
+        detach: true
+        restart_policy: "no"
+        auto_remove: true
+        volumes:
+          - "{{ ansible_user }}_dbdata_temporary:/var/lib/mysql"
+      register: temp_container
 
-  - name: Заблокировать master на запись до завершения переноса данных
-    community.docker.docker_container:
-      name: mysql_temporary_lock_container
-      image: mysql:8.0.42
-      command: >
-        sh -c "mysql -uroot -p{{ mysql_root_password }} -h {{ master_container_name }} -e 'FLUSH TABLES WITH READ LOCK;'; tail -f /dev/null"
-      entrypoint: ""
-      network_mode: container:{{ master_container_name }}
-      state: started
-      detach: true
-      restart_policy: "no"
-      auto_remove: true
-      volumes:
-        - "{{ ansible_user }}_dbdata_temporary:/var/lib/mysql"
-    register: temp_container
+    - name: Снять дамп с master
+      community.mysql.mysql_db:
+        login_host: 127.0.0.1
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        state: dump
+        name: wordpress
+        target: "{{ dump_path }}"
+      changed_when: true
 
-  - name: Снять дамп с master
-    community.mysql.mysql_db:
-      login_host: 127.0.0.1
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-      state: dump
-      name: wordpress
-      target: "{{ dump_path }}"
-    changed_when: true
+    - name: Остановить временный контейнер для снятия блокировки master
+      community.docker.docker_container:
+        name: mysql_temporary_lock_container
+        state: stopped
+      when: temp_container.changed
 
-  - name: Остановить временный контейнер для снятия блокировки master
-    community.docker.docker_container:
-      name: mysql_temporary_lock_container
-      state: stopped
-    when: temp_container.changed
+    - name: Остановить и удалить MySQL Master, MySQL Slave и Metric Exporters контейнеры
+      community.docker.docker_container:
+        name: "{{ item }}"
+        state: absent
+        force_kill: true
+      loop:
+        - "{{ master_container_name }}"
+        - "{{ slave_container_name }}"
+        - mysqld_exporter_master
+        - mysqld_exporter_slave
 
-  - name: Остановить и удалить MySQL Master, MySQL Slave и Metric Exporters контейнеры
-    community.docker.docker_container:
-      name: "{{ item }}"
-      state: absent
-      force_kill: true
-    loop:
-      - "{{ master_container_name }}"
-      - "{{ slave_container_name }}"
-      - mysqld_exporter_master
-      - mysqld_exporter_slave
+    - name: Поднять HAProxy
+      community.docker.docker_container:
+        name: haproxy
+        image: haproxy
+        restart_policy: unless-stopped
+        ports:
+          - "3306:3306"
+        volumes:
+          - "/home/{{ ansible_user }}/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+        networks:
+          - name: "{{ network_name }}"
+        command: /usr/local/sbin/haproxy -f /usr/local/etc/haproxy/haproxy.cfg
 
-  - name: Поднять HAProxy
-    community.docker.docker_container:
-      name: haproxy
-      image: haproxy
-      restart_policy: unless-stopped
-      ports:
-        - "3306:3306"
-      volumes:
-        - "/home/{{ ansible_user }}/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
-      networks:
-        - name: "{{ network_name }}"
-      command: /usr/local/sbin/haproxy -f /usr/local/etc/haproxy/haproxy.cfg
+    - name: Ожидание запуска HAProxy
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 3306
+        delay: 10
+        timeout: 120
 
-  - name: Ожидание запуска HAProxy
-    wait_for:
-      host: 127.0.0.1
-      port: 3306
-      delay: 10
-      timeout: 120
+    - name: Восстановить дамп
+      community.mysql.mysql_db:
+        login_host: 127.0.0.1
+        login_user: root
+        login_password: "{{ mariadb_root_password }}"
+        login_port: 3306
+        name: wordpress
+        state: import
+        target: "{{ dump_path }}"
 
-  - name: Восстановить дамп
-    community.mysql.mysql_db:
-      login_host: 127.0.0.1
-      login_user: root
-      login_password: "{{ mariadb_root_password }}"
-      login_port: 3306
-      name: wordpress
-      state: import
-      target: "{{ dump_path }}"
+    - name: Пересоздать контейнер WordPress с подключением к HAProxy
+      community.docker.docker_container:
+        name: wordpress
+        image: wordpress:5.1.1-fpm-alpine
+        recreate: true
+        restart_policy: unless-stopped
+        env_file: ./.env
+        env:
+          WORDPRESS_DB_HOST: haproxy:3306
+          WORDPRESS_DB_USER: "{{ mariadb_user }}"
+          WORDPRESS_DB_PASSWORD: "{{ mariadb_password }}"
+          WORDPRESS_DB_NAME: wordpress
+        volumes:
+          - wordpress:/var/www/html
+        networks:
+          - name: "{{ network_name }}"
 
-  - name: Пересоздать контейнер WordPress с подключением к HAProxy
-    community.docker.docker_container:
-      name: wordpress
-      image: wordpress:5.1.1-fpm-alpine
-      recreate: yes
-      restart_policy: unless-stopped
-      env_file: ./.env
-      env:
-        WORDPRESS_DB_HOST: haproxy:3306
-        WORDPRESS_DB_USER: "{{ mariadb_user }}"
-        WORDPRESS_DB_PASSWORD: "{{ mariadb_password }}"
-        WORDPRESS_DB_NAME: wordpress
-      volumes:
-        - wordpress:/var/www/html
-      networks:
-        - name: "{{ network_name }}"
-
-  - name: Пересоздать контейнеры Metric Exporters с подключением к Galera Cluster
-    community.docker.docker_container:
-      name: "mariadb_exporter_node_{{ item }}"
-      image: prom/mysqld-exporter
-      restart_policy: unless-stopped
-      exposed_ports:
-        - 9104
-      command:
-        - "--mysqld.username=root:{{ mariadb_root_password }}"
-        - "--mysqld.address=galera_node_{{ item }}:3306"
-      labels:
-        service: mysqld_exporter
-      networks:
-        - name: "{{ network_name }}"
-    loop: [1, 2, 3, 4, 5]
+    - name: Пересоздать контейнеры Metric Exporters с подключением к Galera Cluster
+      community.docker.docker_container:
+        name: "mariadb_exporter_node_{{ item }}"
+        image: prom/mysqld-exporter
+        restart_policy: unless-stopped
+        exposed_ports:
+          - 9104
+        command:
+          - "--mysqld.username=root:{{ mariadb_root_password }}"
+          - "--mysqld.address=galera_node_{{ item }}:3306"
+        labels:
+          service: mysqld_exporter
+        networks:
+          - name: "{{ network_name }}"
+      loop: [1, 2, 3, 4, 5]

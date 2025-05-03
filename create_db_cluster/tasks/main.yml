@@ -13,11 +13,11 @@
   ansible.builtin.meta: reset_connection
 
 - name: Ожидание инициализации master
-  pause:
+  ansible.builtin.pause:
     seconds: 10
 
 - name: Создание пользователя репликации на master
-  mysql_user:
+  ansible.builtin.mysql_user:
     login_host: 127.0.0.1
     login_user: root
     login_password: "{{ mysql_root_password }}"
@@ -70,13 +70,13 @@
   when: slave_container.changed
   block:
     - name: Снять дамп с master
-      import_tasks: tasks/dump_master.yml
+      ansible.builtin.import_tasks: tasks/dump_master.yml
 
     - name: Восстановить дамп на slave
-      import_tasks: tasks/restore_dump_on_slave.yml
+      ansible.builtin.import_tasks: tasks/restore_dump_on_slave.yml
 
     - name: Настроить репликацию
-      import_tasks: tasks/setup_replication.yml
+      ansible.builtin.import_tasks: tasks/setup_replication.yml
 
 - name: Проверить replica статус
   community.docker.docker_container_exec:
@@ -86,5 +86,5 @@
   changed_when: false
 
 - name: Напечатать replica status
-  debug:
+  ansible.builtin.debug:
     var: slave_status
