@@ -19,4 +19,4 @@ db4_host: galera_node_4
 db5_host: galera_node_5
 db_pass: qwerty22
 loadbalancer: haproxy
-monitoring_url: http://192.168.1.99:3000
+monitoring_url: "http://{{ ansible_host }}:3000"
