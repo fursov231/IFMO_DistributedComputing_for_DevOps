@@ -63,11 +63,11 @@
   until: slave_info.container.State.Health.Status == "healthy"
   retries: 30
   delay: 10
-  when: slave_container.changed
+  when: slave_container.changed # noqa no-handler
   changed_when: false
 
 - name: Выполнить задачи по настройке репликации
-  when: slave_container.changed
+  when: slave_container.changed # noqa no-handler
   block:
     - name: Снять дамп с master
       ansible.builtin.import_tasks: tasks/dump_master.yml

@@ -43,7 +43,7 @@
     dest: "{{ home_path }}/docker-compose.yml"
     mode: '0644'
     force: true
-  notify: Перезапуск Docker контейнеров
+  notify: Restart Docker containers
 
 - name: Создать .env файл из шаблона
   ansible.builtin.template:
@@ -72,7 +72,7 @@
   register: start_containers
 
 - name: Ожидание поднятия контейнера c master
-  community.docker.docker_container_info:
+  community.docker.docker_container_info: # noqa no-handler
     name: db_master
   register: container_info
   until: container_info.container.State.Health.Status == "healthy"
@@ -80,4 +80,3 @@
   delay: 10
   when: start_containers.changed
   changed_when: false
-  notify: Пропуск задачи ожидания

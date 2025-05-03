@@ -1,5 +1,5 @@
 ---
-- name: Перезапуск Docker контейнеров
+- name: Restart Docker containers
   community.docker.docker_compose_v2:
     project_src: "{{ home_path }}/monitoring"
     state: restarted
