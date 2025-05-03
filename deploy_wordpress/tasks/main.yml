@@ -1,22 +1,22 @@
 - name: Установка нужных пакетов
-  apt:
+  ansible.builtin.apt:
     name:
       - ca-certificates
       - curl
     state: present
 
 - name: Добавление GPG ключа
-  apt_key:
+  ansible.builtin.apt_key:
     url: "https://download.docker.com/linux/ubuntu/gpg"
     state: present
 
 - name: Добавление docker-репозитория
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
     state: present
 
 - name: Обновление кэша пакетов и установка Docker
-  apt:
+  ansible.builtin.apt:
     name:
       - docker-ce
       - docker-ce-cli
@@ -24,45 +24,46 @@
     state: present
 
 - name: Добавление пользователя в группу Docker
-  user:
+  ansible.builtin.user:
     name: "{{ item }}"
     groups: docker
-    append: yes
+    append: true
   loop: "{{ docker_users }}"
   when: docker_users | length > 0
 
 - name: Автозапуск сервиса
-  service:
+  ansible.builtin.service:
     name: docker
     state: started
-    enabled: yes
+    enabled: true
 
 - name: Создать docker-compose файл из шаблона
-  template:
+  ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ home_path }}/docker-compose.yml"
     mode: '0644'
     force: true
-  notify: Restart Docker containers
+  notify: Перезапуск Docker контейнеров
 
 - name: Создать .env файл из шаблона
-  template:
+  ansible.builtin.template:
     src: .env.j2
     dest: "{{ home_path }}/.env"
     mode: '0644'
     force: true
 
 - name: Создать каталог nginx-conf
-  file:
+  ansible.builtin.file:
     path: "{{ home_path }}/nginx-conf"
     state: directory
     mode: '0755'
 
 - name: Копировать nginx.conf файл
-  copy:
+  ansible.builtin.copy:
     src: nginx.conf
     dest: "{{ home_path }}/nginx-conf/nginx.conf"
     force: true
+    mode: '0644'
 
 - name: Запустить Docker контейнеры
   community.docker.docker_compose_v2:
@@ -79,3 +80,4 @@
   delay: 10
   when: start_containers.changed
   changed_when: false
+  notify: Пропуск задачи ожидания

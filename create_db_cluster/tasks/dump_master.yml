@@ -29,3 +29,4 @@
     name: mysql_temporary_lock_container
     state: stopped
   when: temp_container.changed
+  notify: Пропуск задачи остановки временного контейнера

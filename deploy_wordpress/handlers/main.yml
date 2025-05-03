@@ -1,5 +1,9 @@
 ---
-- name: Restart Docker containers
+- name: Перезапуск Docker контейнеров
   community.docker.docker_compose_v2:
     project_src: "{{ home_path }}"
     state: restarted
+
+- name: Пропуск задачи ожидания
+  ansible.builtin.debug:
+    msg: "Пропустили задачу ожидания"

@@ -1,12 +1,12 @@
 ---
 - name: Создать haproxy каталог
-  file:
+  ansible.builtin.file:
     path: "{{ home_path }}/haproxy"
     state: directory
     mode: '0755'
 
 - name: Создать haproxy config файл из шаблона
-  template:
+  ansible.builtin.template:
     src: haproxy.cfg.j2
     dest: "{{ home_path }}/haproxy/haproxy.cfg"
     mode: '0644'

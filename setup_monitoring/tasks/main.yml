@@ -6,18 +6,19 @@
     mode: '0755'
 
 - name: Копировать prometheus.yml файл
-  copy:
+  ansible.builtin.copy:
     src: prometheus.yml
     dest: "{{ home_path }}/monitoring/prometheus.yml"
     force: true
+    mode: '0644'
 
 - name: Создать docker-compose файл из шаблона
-  template:
+  ansible.builtin.template:
     src: docker-compose.yml.j2
     dest: "{{ home_path }}/monitoring/docker-compose.yml"
     mode: '0644'
     force: true
-  notify: Restart Docker containers
+  notify: Перезапуск Docker контейнеров
 
 - name: Поднять контейнеры Prometheus и Grafana
   community.docker.docker_compose_v2:
@@ -49,10 +50,11 @@
     validate_certs: false
 
 - name: Копировать настроенный дашборд
-  copy:
+  ansible.builtin.copy:
     src: dashboard.json
     dest: "{{ home_path }}/monitoring/dashboard.json"
     force: true
+    mode: '0644'
 
 - name: Импортировать дашборд в Grafana
   community.grafana.grafana_dashboard:
