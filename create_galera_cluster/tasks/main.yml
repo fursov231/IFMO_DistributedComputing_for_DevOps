@@ -55,7 +55,7 @@
   retries: 30
   delay: 10
   changed_when: false
-  when: galera_bootstrap_node.changed
+  when: galera_bootstrap_node.changed # noqa no-handler
 
 - name: Поднять дополнительные ноды MariaDB Galera
   community.docker.docker_container:
@@ -92,10 +92,10 @@
   delay: 10
   changed_when: false
   loop: [2, 3, 4, 5]
-  when: galera_bootstrap_node.changed
+  when: galera_bootstrap_node.changed # noqa no-handler
 
 - name: Выполнить задачи по настройке Galera cluster
-  when: galera_bootstrap_node.changed
+  when: galera_bootstrap_node.changed # noqa no-handler
   block:
     - name: Заблокировать master на запись до завершения переноса данных
       community.docker.docker_container:
@@ -127,7 +127,7 @@
       community.docker.docker_container:
         name: mysql_temporary_lock_container
         state: stopped
-      when: temp_container.changed
+      when: temp_container.changed # noqa no-handler
 
     - name: Остановить и удалить MySQL Master, MySQL Slave и Metric Exporters контейнеры
       community.docker.docker_container:
