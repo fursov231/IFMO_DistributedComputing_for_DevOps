@@ -28,4 +28,4 @@
   community.docker.docker_container:
     name: mysql_temporary_lock_container
     state: stopped
-  when: temp_container.changed
+  when: temp_container.changed # noqa no-handler

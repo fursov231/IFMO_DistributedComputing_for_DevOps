@@ -4,4 +4,3 @@ home_path: /home/{{ ansible_user }}
 master_container_name: db_master
 mysql_master_port: 3306
 slave_container_name: db_slave
-mysql_slave_port: 3307
