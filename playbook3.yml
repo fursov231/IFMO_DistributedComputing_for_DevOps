@@ -1,5 +1,6 @@
 ---
 - name: Home work 3
   hosts: my_server
+  become: true
   roles:
     - setup_monitoring

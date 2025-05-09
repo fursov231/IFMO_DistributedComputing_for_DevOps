@@ -16,8 +16,8 @@ frontend galera
 backend galera_cluster
   balance roundrobin
   mode tcp
-  server node1 galera_node_1:3306 check
-  server node2 galera_node_2:3306 check
-  server node3 galera_node_3:3306 check
-  server node4 galera_node_4:3306 check
-  server node5 galera_node_5:3306 check
+  server node1 {{ db1_host }}:3306 check
+  server node2 {{ db2_host }}:3306 check
+  server node3 {{ db3_host }}:3306 check
+  server node4 {{ db4_host }}:3306 check
+  server node5 {{ db5_host }}:3306 check

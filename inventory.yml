@@ -1,7 +1,7 @@
 all:
   hosts:
     my_server:
-      ansible_host: 192.168.1.99
+      ansible_host: 192.168.1.112
       ansible_user: vboxuser
       ansible_password: vboxuser
       ansible_become_method: sudo

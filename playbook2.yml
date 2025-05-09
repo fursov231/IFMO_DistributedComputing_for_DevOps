@@ -1,5 +1,6 @@
 ---
 - name: Home work 2
   hosts: my_server
+  become: true
   roles:
     - create_db_cluster

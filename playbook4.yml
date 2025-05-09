@@ -1,5 +1,6 @@
 ---
 - name: Home work 4
   hosts: my_server
+  become: true
   roles:
     - create_galera_cluster
