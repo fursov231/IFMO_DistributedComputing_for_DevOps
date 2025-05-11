@@ -14,6 +14,14 @@
       - "loadbalancer: {{ loadbalancer }}"
       - "monitoring_url: {{ monitoring_url }}"
 
+- name: Установить mariadb-client
+  ansible.builtin.apt: # noqa package-latest
+    name: mariadb-client
+    state: latest
+
+- name: Переподключиться после установки mariadb-client для сброса кэша путей к исполняемым файлам
+  ansible.builtin.meta: reset_connection
+
 - name: Создать haproxy каталог
   ansible.builtin.file:
     path: "{{ home_path }}/haproxy"
