@@ -40,7 +40,7 @@
     name: "galera_data_node_{{ item }}"
     driver: local
     state: present
-  loop: [ 1, 2, 3, 4, 5 ]
+  loop: [1, 2, 3, 4, 5]
 
 - name: Поднять бутстрап MariaDB Galera узел
   community.docker.docker_container:
@@ -59,7 +59,7 @@
       MARIADB_GALERA_FORCE_SAFETOBOOTSTRAP: "yes"
       MARIADB_GALERA_SST_METHOD: "rsync"
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}" ]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}"]
       interval: 10s
       retries: 3
       start_period: 50s
@@ -97,14 +97,14 @@
     volumes:
       - "galera_data_node_{{ item }}:/bitnami/mariadb/data"
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}" ]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-uroot", "-p{{ mariadb_root_password }}"]
       interval: 10s
       retries: 3
       start_period: 50s
       timeout: 10s
     networks:
       - name: "{{ network_name }}"
-  loop: [ 2, 3, 4, 5 ]
+  loop: [2, 3, 4, 5]
 
 - name: Ожидание поднятия всех узлов MariaDB Galera
   community.docker.docker_container_info:
@@ -114,7 +114,7 @@
   retries: 30
   delay: 10
   changed_when: false
-  loop: [ 2, 3, 4, 5 ]
+  loop: [2, 3, 4, 5]
   when: galera_bootstrap_node.changed # noqa no-handler
 
 - name: Выполнить задачи по настройке Galera cluster
@@ -224,4 +224,4 @@
           service: mysqld_exporter
         networks:
           - name: "{{ network_name }}"
-      loop: [ 1, 2, 3, 4, 5 ]
+      loop: [1, 2, 3, 4, 5]
