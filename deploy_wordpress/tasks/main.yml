@@ -8,9 +8,9 @@
       - "db_pass: {{ db_pass }}"
 
 - name: Update and upgrade apt packages
-  apt:
-    upgrade: yes
-    update_cache: yes
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
 
 - name: Установка нужных пакетов
   ansible.builtin.apt:
