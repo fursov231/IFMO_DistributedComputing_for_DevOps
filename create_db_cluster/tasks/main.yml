@@ -1,5 +1,14 @@
+- name: Display Configuration Variables
+  ansible.builtin.debug:
+    msg:
+      - "wordpress: {{ is_wordpress }}"
+      - "wordpress_port: {{ wordpress_port }}"
+      - "wordpress_db_name: {{ wordpress_db_name }}"
+      - "db_master: {{ db_master }}"
+      - "db_replica: {{ db_replica }}"
+      - "db_pass: {{ db_pass }}"
 - name: Установить библиотеки
-  apt:
+  ansible.builtin.apt: # noqa package-latest
     name: [
       "python3",
       "python3-pip",
@@ -12,8 +21,12 @@
 - name: Переподключиться после установки библиотек для сброса кэша путей к исполняемым файлам
   ansible.builtin.meta: reset_connection
 
+- name: Ожидание инициализации master
+  ansible.builtin.pause:
+    seconds: 10
+
 - name: Создание пользователя репликации на master
-  mysql_user:
+  ansible.builtin.mysql_user: # noqa fqcn[canonical]
     login_host: 127.0.0.1
     login_user: root
     login_password: "{{ mysql_root_password }}"
@@ -35,7 +48,7 @@
     name: "{{ slave_container_name }}"
     image: mysql:8.0.42
     env:
-      MYSQL_ROOT_PASSWORD={{ mysql_root_password }}
+      MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
     networks:
       - name: "{{ network_name }}"
     volumes:
@@ -59,20 +72,20 @@
   until: slave_info.container.State.Health.Status == "healthy"
   retries: 30
   delay: 10
-  when: slave_container.changed
+  when: slave_container.changed # noqa no-handler
   changed_when: false
 
 - name: Выполнить задачи по настройке репликации
-  when: slave_container.changed
+  when: slave_container.changed # noqa no-handler
   block:
     - name: Снять дамп с master
-      import_tasks: tasks/dump_master.yml
+      ansible.builtin.import_tasks: tasks/dump_master.yml
 
     - name: Восстановить дамп на slave
-      import_tasks: tasks/restore_dump_on_slave.yml
+      ansible.builtin.import_tasks: tasks/restore_dump_on_slave.yml
 
     - name: Настроить репликацию
-      import_tasks: tasks/setup_replication.yml
+      ansible.builtin.import_tasks: tasks/setup_replication.yml
 
 - name: Проверить replica статус
   community.docker.docker_container_exec:
@@ -82,5 +95,5 @@
   changed_when: false
 
 - name: Напечатать replica status
-  debug:
+  ansible.builtin.debug:
     var: slave_status

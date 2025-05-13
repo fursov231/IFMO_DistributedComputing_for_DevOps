@@ -6,7 +6,7 @@
   register: master_status
 
 - name: Записать координаты репликации
-  set_fact:
+  ansible.builtin.set_fact:
     master_log_file: "{{ master_status.query_result[0][0].File }}"
     master_log_pos: "{{ master_status.query_result[0][0].Position }}"
 
